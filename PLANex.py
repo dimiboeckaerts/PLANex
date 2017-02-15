@@ -5,12 +5,10 @@ Created on Fri Sep 30 15:31:57 2016
 
 @author: dimiboeckaerts
 
-Notes and remarks at the end of the script.
 """
 
 ### The PLANex Scheduling Algorithm 
 ### ------------------------------------------
-
 
 def PLANex(file=0, prof=0, days=0, length=28):
     
@@ -29,8 +27,7 @@ def PLANex(file=0, prof=0, days=0, length=28):
     from helpers import theverybest
     from helpers import thecreator
     
-    # werken helpers in andere helpers als ze enkel hier imported worden?
-    
+
     # INTRO
     # ----------------------------------------
     print('Hi, I\'m PLANex, you\'re exam timetabeling assistant.')
