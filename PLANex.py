@@ -5,19 +5,20 @@ Created on Fri Sep 30 15:31:57 2016
 
 @author: dimiboeckaerts
 
+Notes and remarks in seperate script.
 """
 
 ### The PLANex Scheduling Algorithm 
 ### ------------------------------------------
 
-def PLANex(file=0, prof=0, days=0, length=28):
+def PLANex(file=0, prof=0, days=0, startdate, length=28):
     
     # IMPORT LIBRARIES
     # ----------------------------------------
     import openpyxl as oxl
-    import pandas as pd
     import numpy as np
     import random as ran
+    from helpers import dataprep
     from helpers import unicorn
     from helpers import indx
     from helpers import buds
@@ -26,8 +27,12 @@ def PLANex(file=0, prof=0, days=0, length=28):
     from helpers import satdegree
     from helpers import theverybest
     from helpers import thecreator
+    from helpers import fitness1
+    from helpers import optimizer1
+    from helpers import proxcost
+    from helpers import optimizer2
     
-
+    
     # INTRO
     # ----------------------------------------
     print('Hi, I\'m PLANex, you\'re exam timetabeling assistant.')
@@ -36,94 +41,64 @@ def PLANex(file=0, prof=0, days=0, length=28):
         print('Oops, it seems that you have not given me the correct input.\
         Please try again.')
         return
+    elif (len(startdate) != 7 or len(startdate) != 8 or type(startdate) != str):
+        print('Oops, please input the correct date format: dd/m/yy or dd/mm/yy as a string.')
+        return
     else:
         print('Data prep on it\'s way.')
-            
+                
         
     # DATA PREP
     # ----------------------------------------
+    stu, vak, courses, profd = dataprep(file, days, prof)      
     
-    # FILE
-    wb = oxl.load_workbook(file)
-    lst = wb.get_sheet_names()
-    sheet = wb.get_sheet_by_name(lst[0])
-    test = 0
     
-    for j in range(1, sheet.max_column):
-        sheetvalue = sheet.cell(row=1, column=j).value
-        logic1 = sheetvalue in ['VAK', 'Vak', 'vak', 'CURSUS', 'Cursus', 'cursus', 'CURSUSNAAM', 'Cursusnaam', 'cursusnaam']
-        logic2 = sheetvalue in ['EMAIL', 'Email', 'email', 'MAIL', 'Mail', 'mail', 'EMAILADRES', 'Emailadres', 'emailadres']
-        if logic1 == True:
-            test += 1
-            lst1 = []
-            for i in range(2, sheet.max_row+1):
-                lst1.append(sheet.cell(row=i, column=j).value)
-                if (i/sheet.max_row*100) % 10 == 0:
-                    print(str(i/sheet.max_row*100) + ' % done (1/4)')
-        elif logic2 == True:
-            test += 1
-            lst2 = []
-            for k in range(2, sheet.max_row+1):
-                lst2.append(sheet.cell(row=k, column=j).value)
-                if (k/sheet.max_row*100) % 10 == 0:
-                    print(str(k/sheet.max_row*100) + ' % done (2/4)')
-    if test != 2:
-        print('Oops, it seems that you have not given me the correct input.\
-        Please try again.')
-        return
-    else:
-        vak = lst1
-        stu = lst2
-        courses = unicorn(vak)
-        
-    # DAYS
-    wb = oxl.load_workbook(days)
-    lst = wb.get_sheet_names()
-    sheet = wb.get_sheet_by_name(lst[0])
-    
-    if (type(sheet.cell(row=1, column=2).value) != int) and (type(sheet.cell(row=1, column=1).value) != str):
-        print('Oops, there is something wrong with your \'days\' file. Please try again.')
-        return
-            
-    for i in range(1, sheet.max_row+1):
-        sheetvalue = sheet.cell(row=i, column=2).value
-        if sheetvalue > 1:
-            for j in range(1,sheetvalue):
-                # range to sheetvalue, not sheetvalue+1 because we already have
-                # the course one time in the list.
-                courses.append(sheet.cell(row=i, column=1).value)
-        if (i/sheet.max_row*100) % 10 == 0:
-            print(str(i/sheet.max_row*100) + ' % done (3/4)')
-        
-    courses = sorted(courses)
-    
-    # PROF
-    wb = oxl.load_workbook(prof)
-    lst = wb.get_sheet_names()
-    sheet = wb.get_sheet_by_name(lst[0])
-    
-    if (type(sheet.cell(row=1, column=2).value) != int) and (type(sheet.cell(row=1, column=1).value) != str):
-        print('Oops, there is something wrong with your \'prof\' file. Please try again.')
-        return
-    else:
-        profd = {}
-        for i in range(1, sheet.max_row+1):
-            lijst = []
-            for j in range(2, sheet.max_column+1):
-                if sheet.cell(row=i, column=j).value != 0:
-                    lijst.append(sheet.cell(row=i, column=j).value)
-                    
-            profd[sheet.cell(row=i, column=1).value] = lijst
-
-            if (i/sheet.max_row*100) % 10 == 0:
-                print(str(i/sheet.max_row*100) + ' % done (4/4)')
-                
-    print('Data prep done. Now let\'s get scheduling.')
-        
-    
-    # GENETIC ALGORITHM
+    # GENETIC ALGORITHM - PHASE 1
     # ----------------------------------------
+    # Creating initial schedule
     n1 = 1000
+    vector, sched = thecreator(stu, vak, courses, length, profd, n1)
+    n_generations_1 = 0
+    test = 1
     
-    sched = thecreator(stu, vak, courses, length, profd, n1)
+    # Phase 1 optimization
+    while (test != 0 and n_generations_1 < 50):
+        sched, test = optimizer1(sched, vector, courses, stu, vak, profd)
+        n_generations_1 += 1
+        
+    if n_generations_1 == 50:
+        print('Very difficult schedule... full optimization probably impossible.')
+    
+        
+    # GENETIC ALGORITHM - PHASE 2
+    # ----------------------------------------
+    n2 = 500
+    n_generations_2 = 1000
+    
+    for i in range(0, n_generations_2):
+        sched = optimizer2(sched, vector, courses, stu, vak, profd, n2)
+        
+        
+    # WORKING WITH DATETIME
+    # ----------------------------------------
+    thedate = dt.datetime.strptime(startdate, "%d/%m/%y")
+    final_sched = []
+    softcost = 10000
+    
+    for i in range(0, len(sched)):
+        newcost = fitness2(sched[i], courses, stu, vak)
+        if newcost < softcost:
+            softcost = newcost
+            newschedlst = sched[i]
+        
+    for i in range(0, len(newschedlst)):
+        date = thedate + dt.timedelta(days = newschedlst[i]-1)
+        final_sched.append(date.strftime('%d/%m'))
+    
+    print('Final schedule:')
+    for i in range(0, len(final_sched)):
+        print(courses[i], ':', final_sched[i])
+        
+    return
+        
     
