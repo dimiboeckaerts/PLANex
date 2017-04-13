@@ -29,7 +29,7 @@ def PLANex(file=0, prof=0, days=0, startdate, length=28):
     from helpers import thecreator
     from helpers import fitness1
     from helpers import optimizer1
-    from helpers import proxcost
+    from helpers import fitness2
     from helpers import optimizer2
     
     
@@ -63,7 +63,7 @@ def PLANex(file=0, prof=0, days=0, startdate, length=28):
     
     # Phase 1 optimization
     while (test != 0 and n_generations_1 < 50):
-        sched, test = optimizer1(sched, vector, courses, stu, vak, profd)
+        sched, test = optimizer1(sched, vector, courses, stu, vak, profd, length)
         n_generations_1 += 1
         
     if n_generations_1 == 50:
@@ -100,5 +100,4 @@ def PLANex(file=0, prof=0, days=0, startdate, length=28):
         print(courses[i], ':', final_sched[i])
         
     return
-        
-    
+                
