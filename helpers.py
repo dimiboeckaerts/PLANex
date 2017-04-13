@@ -314,7 +314,7 @@ def thecreator(stu, vak, courses, length, profd, n1):
             print(str(i/n1*100) + ' %  of initial timetables done')
     #print(dt.datetime.now() - now)
     return vector, sched
-                
+                    
     
 #%% FITNESS PHASE 1
 """
@@ -362,7 +362,7 @@ http://www.sciencedirect.com/science/article/pii/S1568494609001331
 TESTPHASE
 """
 
-def optimizer1(sched, vector, courses, stu, vak, profd):
+def optimizer1(sched, vector, courses, stu, vak, profd, length):
     newsched = {}
     test = 0 # dummy to stop optimization
     
@@ -388,8 +388,11 @@ def optimizer1(sched, vector, courses, stu, vak, profd):
             order_period = [vector2 for (cost, vector2) in sorted(zip(cost, vector2))]
             index = indx(courses, newclashes[0])
             
-            # index0 steeds nemen niet goed, wie weet staat ander mond examen fout...
+            #if len(index) > 1:
+            #    ...
+            #else:
             newsched[i][index[0]] = order_period[0]
+            
     return newsched, test
     
             
