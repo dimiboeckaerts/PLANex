@@ -1,5 +1,5 @@
 """
-HELPERS (PROJECT PLANex)
+HELPERS (PROJECT PLANex - Genetic Algorithm)
 
 Created on Sat Oct  8 00:26:41 2016
 
