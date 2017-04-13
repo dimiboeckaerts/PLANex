@@ -1,5 +1,5 @@
 """
-PROJECT PLANex
+PROJECT PLANex (Genetic Algorithm)
 
 Created on Fri Sep 30 15:31:57 2016
 
